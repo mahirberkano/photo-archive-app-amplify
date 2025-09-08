@@ -68,3 +68,4 @@ amplifytools.xcconfig
 # amplify
 .amplify
 amplifyconfiguration*
+/repo-backup.git
