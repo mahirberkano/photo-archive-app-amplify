@@ -1,0 +1,33 @@
+{
+  "name": "photo-archive",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@aws-amplify/api": "^6.3.17",
+    "@aws-amplify/auth": "^6.15.0",
+    "@aws-amplify/storage": "^6.9.5",
+    "@aws-amplify/ui-react": "^6.12.0",
+    "@aws-sdk/client-dynamodb": "^3.879.0",
+    "@aws-sdk/client-s3": "^3.882.0",
+    "@aws-sdk/s3-request-presigner": "^3.882.0",
+    "@aws-sdk/util-dynamodb": "^3.879.0",
+    "aws-amplify": "^6.15.5",
+    "next": "15.5.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.2",
+    "tailwindcss": "^4"
+  }
+}
