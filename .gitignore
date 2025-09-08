@@ -68,4 +68,3 @@ amplifytools.xcconfig
 # amplify
 .amplify
 amplifyconfiguration*
-amplify_outputs.json
