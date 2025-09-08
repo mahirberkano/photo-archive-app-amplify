@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { generateClient } from 'aws-amplify/data';
 import { getUrl } from 'aws-amplify/storage';
 import Image from 'next/image';
+
+// ✅ Data client
+const client = generateClient();
 
 export default function UserProfile({ username }) {
   const [photos, setPhotos] = useState([]);
@@ -17,29 +21,32 @@ export default function UserProfile({ username }) {
 
   const fetchUserPhotos = async () => {
     try {
-      const response = await fetch(`/api/photos?username=${username}`);
-      if (!response.ok) throw new Error('Fotoğraflar alınamadı');
-      
-      const photoData = await response.json();
-      
+      // ✅ Query Amplify Data directly
+      const { data, errors } = await client.models.Photo.list({
+        filter: { uploadedBy: { eq: username } },
+      });
+
+      if (errors) throw new Error(errors.map((e) => e.message).join(', '));
+
+      // ✅ Generate signed S3 URLs for each photo
       const photosWithUrls = await Promise.all(
-        photoData.map(async (photo) => {
+        data.map(async (photo) => {
           try {
             const { url } = await getUrl({
-              path: photo.fileName,
-              options: { expiresIn: 3600 }
+              key: photo.fileName, // Gen2 uses `key`, not `path`
+              options: { expiresIn: 3600, accessLevel: 'public' },
             });
             return { ...photo, url: url.toString() };
-          } catch (error) {
-            console.error('URL alma hatası:', error);
+          } catch (err) {
+            console.error('URL fetch error:', err);
             return { ...photo, url: null };
           }
         })
       );
-      
+
       setPhotos(photosWithUrls);
-    } catch (error) {
-      console.error('Error fetching photos:', error);
+    } catch (err) {
+      console.error('Error fetching photos:', err);
       setError('Fotoğraflar yüklenirken hata oluştu');
     }
     setLoading(false);
@@ -61,7 +68,10 @@ export default function UserProfile({ username }) {
       ) : (
         <div className="masonry">
           {photos.map((photo, idx) => (
-            <div key={photo.photoId || photo.photoarchive || idx} className="masonry-item">
+            <div
+              key={photo.id || idx}
+              className="masonry-item"
+            >
               {photo.url ? (
                 <Image
                   src={photo.url}
@@ -69,7 +79,7 @@ export default function UserProfile({ username }) {
                   width={400}
                   height={300}
                   className="rounded-lg shadow-md mb-2"
-                  unoptimized={true}
+                  unoptimized
                 />
               ) : (
                 <div className="photo-placeholder bg-gray-200 h-40 rounded mb-2 flex items-center justify-center">
@@ -81,7 +91,9 @@ export default function UserProfile({ username }) {
                   {photo.caption || 'Açıklama yok'}
                 </p>
                 <small className="text-xs text-gray-500">
-                  {new Date(photo.createdAt).toLocaleDateString('tr-TR')}
+                  {photo.createdAt
+                    ? new Date(photo.createdAt).toLocaleDateString('tr-TR')
+                    : ''}
                 </small>
               </div>
             </div>

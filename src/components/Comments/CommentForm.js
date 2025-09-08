@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
+import { generateClient } from 'aws-amplify/data';
+import { AmplifyProvider } from '../AmplifyProvider';
+// ✅ Amplify Data client
+const client = generateClient();
 
 export default function CommentForm({ photoId, author, onCommentAdded }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -12,28 +16,22 @@ export default function CommentForm({ photoId, author, onCommentAdded }) {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoId, text, author }),
+      const { data, errors } = await client.models.Comment.create({
+        photoId,
+        text,
+        author,
+        createdAt: new Date().toISOString(),
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        // ✅ Yeni yorumu üst componente bildir
-        onCommentAdded({
-          photoId,
-          commentId: data.commentId,
-          text,
-          author,
-          createdAt: data.createdAt,
-        });
-        setText("");
-      } else {
-        console.error("Yorum ekleme hatası:", data.error);
+      if (errors) {
+        console.error('❌ Yorum ekleme hatası:', errors);
+        return;
       }
+
+      onCommentAdded(data); // ✅ Use returned `id`
+      setText('');
     } catch (err) {
-      console.error("Yorum gönderilemedi:", err);
+      console.error('❌ Yorum gönderilemedi:', err);
     } finally {
       setLoading(false);
     }
@@ -53,7 +51,7 @@ export default function CommentForm({ photoId, author, onCommentAdded }) {
         disabled={loading}
         className="bg-blue-500 text-white px-3 py-1 rounded disabled:opacity-50"
       >
-        {loading ? "Gönderiliyor..." : "Gönder"}
+        {loading ? 'Gönderiliyor...' : 'Gönder'}
       </button>
     </form>
   );

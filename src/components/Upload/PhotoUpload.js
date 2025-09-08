@@ -1,13 +1,14 @@
 'use client';
+
 import React, { useState } from 'react';
-import { Amplify } from 'aws-amplify';
 import { uploadData } from 'aws-amplify/storage';
 import { getCurrentUser } from 'aws-amplify/auth';
+import { generateClient } from 'aws-amplify/data';
 import { v4 as uuidv4 } from 'uuid';
-import config from '@/aws-exports';
-import { fetchAuthSession } from 'aws-amplify/auth';
-// Amplify yapılandırması
-Amplify.configure(config);
+import outputs from '../../../amplify_outputs.json';
+
+// Amplify Data client
+const client = generateClient({ authMode: 'userPool', ...outputs });
 
 export default function PhotoUpload({ onUploadSuccess }) {
   const [file, setFile] = useState(null);
@@ -52,42 +53,36 @@ export default function PhotoUpload({ onUploadSuccess }) {
       const fileExtension = file.name.split('.').pop();
       const fileName = `${fileId}.${fileExtension}`;
 
-      // 🔥 Cognito kullanıcısını al → username
+      //  Cognito kullanıcısını al → username
       const user = await getCurrentUser();
       const username = user.username;
 
-      // S3'e yükle
-      const uploadResult = await uploadData({
+      //  S3'e yükle
+      await uploadData({
         key: fileName,
         data: file,
         options: {
           accessLevel: 'public',
           contentType: file.type,
-        }
+        },
       }).result;
 
-      console.log('S3 yükleme başarılı:', uploadResult);
-        // Yükleme başarılıysa, kimlik bilgilerini al
-      const session = await fetchAuthSession();
-      const identityId = session.identityId;
-      const s3Key = `public/${fileName}`;
-      // DynamoDB'ye kaydet
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          photoId: fileId,
-          caption,
-          fileName: s3Key,
-          uploadedBy: username,
-        }),
+      console.log(' S3 yükleme başarılı:', fileName);
+
+      // 🔥 DynamoDB'ye kaydet (doğrudan Data client ile)
+      const { data, errors } = await client.models.Photo.create({
+        id: fileId,
+        fileName: fileName,
+        caption,
+        uploadedBy: username,
+        createdAt: new Date().toISOString(),
       });
 
-      if (!response.ok) {
-        throw new Error('Fotoğraf bilgileri kaydedilemedi');
+      if (errors) {
+        throw new Error(errors.map((e) => e.message).join(', '));
       }
+
+      console.log('✅ DynamoDB kaydı başarılı:', data);
 
       onUploadSuccess?.();
       setFile(null);

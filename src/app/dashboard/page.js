@@ -63,6 +63,15 @@ function DashboardPage() {
         >
           Profilim
         </button>
+        <button
+      className={'nav-button'}
+      onClick={() => {
+        setActiveTab('home');      // state değişsin
+        router.push('/');          // ana sayfaya yönlendir
+      }}
+    >
+      Ana sayfa
+    </button>
       </nav>
 
       <main className="dashboard-content">
