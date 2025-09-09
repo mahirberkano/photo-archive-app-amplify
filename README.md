@@ -12,7 +12,8 @@ Easily upload, manage, and view your photo collection in the cloud.
 
 ## 🌐 Demo
 
-🚀 **Live Demo**: [Photo Archive App]([https://main.d2y1dpbyx183v6.amplifyapp.com/])  
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-brightgreen)](https://main.d2y1dpbyx183v6.amplifyapp.com/)
+
  
 
 ---
