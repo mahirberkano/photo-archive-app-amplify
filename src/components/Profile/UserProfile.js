@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import { getUrl } from 'aws-amplify/storage';
 import Image from 'next/image';
@@ -300,12 +300,6 @@ export default function UserProfile({ username }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [comments, setComments] = useState({});
 
-  useEffect(() => {
-    if (username) {
-      fetchUserPhotos();
-    }
-  }, [username]);
-
   const openPhotoModal = (photo) => {
     setSelectedPhoto(photo);
     setShowModal(true);
@@ -350,7 +344,8 @@ export default function UserProfile({ username }) {
     }
   };
 
-  const fetchUserPhotos = async () => {
+  // ✅ Fixed: Use useCallback to memoize the function
+  const fetchUserPhotos = useCallback(async () => {
     try {
       const { data, errors } = await client.models.Photo.list({
         filter: { uploadedBy: { eq: username } },
@@ -384,7 +379,14 @@ export default function UserProfile({ username }) {
       setError('Error loading photos');
     }
     setLoading(false);
-  };
+  }, [username]); // ✅ Include username as dependency
+
+  // ✅ Fixed: Include fetchUserPhotos in dependencies
+  useEffect(() => {
+    if (username) {
+      fetchUserPhotos();
+    }
+  }, [username, fetchUserPhotos]);
 
   if (loading) {
     return (
@@ -460,7 +462,7 @@ export default function UserProfile({ username }) {
               </svg>
             </div>
             <h2 className="empty-state-title">No Posts Yet</h2>
-            <p className="empty-state-text">When {username} shares photos, they'll appear here.</p>
+            <p className="empty-state-text">When {username} shares photos, they&apos;ll appear here.</p>
           </div>
         ) : (
           <div className="photos-grid">

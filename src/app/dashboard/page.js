@@ -3,7 +3,7 @@
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { signOut } from 'aws-amplify/auth';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PhotoUpload from '@/components/Upload/PhotoUpload';
 import UserProfile from '@/components/Profile/UserProfile';
@@ -207,11 +207,8 @@ function DashboardPage() {
   const [activeTab, setActiveTab] = useState('upload');
   const router = useRouter();
 
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  async function checkUser() {
+  // Use useCallback to memoize the checkUser function
+  const checkUser = useCallback(async () => {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
@@ -219,7 +216,11 @@ function DashboardPage() {
       console.log('User not logged in');
       router.push('/');
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    checkUser();
+  }, [checkUser]);
 
   const handleSignOut = async () => {
     try {

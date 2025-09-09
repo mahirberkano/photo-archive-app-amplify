@@ -25,7 +25,7 @@ function HomePage() {
   // 🔥 Fotoğrafları sayfa yüklenince al
   useEffect(() => {
     fetchPhotos();
-  }, []);
+  },);
 
   // --- Fetch Photos ---
   async function fetchPhotos() {
@@ -110,6 +110,7 @@ function HomePage() {
   return (
     <AmplifyProvider>
       <Authenticator
+      signUpAttributes={['email', 'preferred_username']}
       >
         {({ user }) => (
           <div className="instagram-feed">
